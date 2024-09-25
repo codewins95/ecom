@@ -2,8 +2,10 @@ import React, { useState } from "react";
 import loginIcons from "../assest/signin.gif";
 import { FaEye } from "react-icons/fa";
 import { FaEyeSlash } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import imageToBase64 from "../helpers/uploadImage";
+import SummaryApi from "../common";
+import { toast } from "react-toastify";
 
 const SignUp = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -13,35 +15,57 @@ const SignUp = () => {
     email: "",
     password: "",
     confirmPassword: "",
-    profilePic:""
+    profilePic: "",
   });
+  const navigate = useNavigate();
 
   const handleOnChange = (e) => {
     const { name, value } = e.target;
     setData((prevData) => ({ ...prevData, [name]: value }));
   };
 
-  const handleOnSubmit = (e) => {
+  const handleOnSubmit = async (e) => {
     e.preventDefault();
-    console.log(data);
-  };
+    // console.log(data);
+    if (data.password === data.confirmPassword) {
+      const dataResponce = await fetch(SummaryApi.signUP.url, {
+        method: SummaryApi.signUP.method,
+        credentials: 'include',
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
 
+      const responce = await dataResponce.json();
+      if (responce.success) {
+        toast.success(responce.message);
+        navigate("/login");
+      }
+      if (responce.error) {
+        toast.error(responce.message);
+      }
+      // console.log("userdata", responce);
+    } else {
+      toast.error("Please check your password");
+    }
+  };
   const handleUploadPic = async (e) => {
     const file = e.target.files[0];
-    
+
     if (file) {
-        try {
-            const base64String = await imageToBase64(file);
-            
-            setData((prevData) => ({ ...prevData, profilePic: base64String }));
-            // console.log("Base64:", base64String);
-        } catch (error) {
-            console.error("Error converting image to Base64", error);
-        }
+      try {
+        const base64String = await imageToBase64(file);
+
+        setData((prevData) => ({ ...prevData, profilePic: base64String }));
+        // console.log("Base64:", base64String);
+      } catch (error) {
+        console.error("Error converting image to Base64", error);
+      }
     } else {
-        console.warn("No file selected");
+      console.warn("No file selected");
     }
-};
+  };
 
   return (
     <>
